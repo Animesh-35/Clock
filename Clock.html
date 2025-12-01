@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Clock & Today's Date</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#6bd3ff;
+      --muted:#9aa6b2;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      color-scheme: dark;
+    }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg,#071025 0%, #091628 100%);
+      color:#e6eef6;
+      padding:28px;
+    }
+    .clock-card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px;
+      padding:22px;
+      box-shadow: 0 10px 40px rgba(2,6,23,0.6);
+      width: min(520px, 96%);
+      text-align:center;
+    }
+    .time{
+      font-size:48px;
+      font-weight:800;
+      letter-spacing:1px;
+      margin:6px 0;
+    }
+    .ampm{
+      font-size:14px;
+      vertical-align:super;
+      margin-left:6px;
+      font-weight:700;
+      color:var(--accent);
+    }
+    .date{
+      font-size:18px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+    .tz{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    /* small responsive adjustments */
+    @media (max-width:420px){
+      .time{font-size:36px}
+      .date{font-size:16px}
+    }
+  </style>
+</head>
+<body>
+  <div class="clock-card" role="region" aria-label="Current time and date">
+    <div style="font-weight:700;font-size:14px;letter-spacing:0.6px;">Current Time</div>
+    <div id="time" class="time" aria-live="polite">--:--:-- <span class="ampm">--</span></div>
+
+    <div id="date" class="date" aria-live="polite">Loading date…</div>
+    <div id="tz" class="tz"></div>
+  </div>
+
+  <script>
+    // Uses the browser locale so it matches the user's settings (e.g., en-IN).
+    const timeEl = document.getElementById('time');
+    const dateEl = document.getElementById('date');
+    const tzEl = document.getElementById('tz');
+
+    function pad(n){ return String(n).padStart(2, '0'); }
+
+    function updateClock(){
+      const now = new Date();
+
+      // Hours/min/sec and AM/PM
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours === 0 ? 12 : hours; // convert 0 to 12
+      const minutes = pad(now.getMinutes());
+      const seconds = pad(now.getSeconds());
+
+      timeEl.innerHTML = `${pad(hours)}:${minutes}:${seconds} <span class="ampm">${ampm}</span>`;
+
+      // Full date like: Wednesday, Nov 26, 2025
+      // Using Intl.DateTimeFormat for correct locale formatting
+      const locale = navigator.language || 'en-IN';
+      const dateFormatter = new Intl.DateTimeFormat(locale, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      dateEl.textContent = 'Today — ' + dateFormatter.format(now);
+
+      // Timezone name (best-effort)
+      let tz = 'Timezone: ' + (Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local');
+      tzEl.textContent = tz;
+    }
+
+    // Start immediately and update every second
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Accessibility: allow pressing "T" to focus the clock card
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 't' && !e.ctrlKey && !e.metaKey) {
+        document.querySelector('.clock-card').focus();
+      }
+    });
+  </script>
+</body>
+</html>
